@@ -1,0 +1,6 @@
+README.md
+setup.py
+solutil.egg-info/PKG-INFO
+solutil.egg-info/SOURCES.txt
+solutil.egg-info/dependency_links.txt
+solutil.egg-info/top_level.txt
