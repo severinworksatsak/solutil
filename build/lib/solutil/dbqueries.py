@@ -4,13 +4,10 @@ Created on Tue Apr 16 09:49:48 2024
 
 @author: LES
 """
-import os
 from datetime import datetime, timedelta, date, timezone
 from pytz import timezone
 import pandas as pd
-import numpy as np
-from os import path, getenv, environ
-from pathlib import Path
+import os
 from dotenv import load_dotenv
 import oracledb
 import warnings
@@ -84,7 +81,7 @@ def get_timeseries_15min(ts_id: int, date_from, date_to,
     Returns:
     - data_out (pd.df): Dataframe with output time series; timestamp index and col_name column.
     """
-    if date_from.tzinfo is None:  # TODO: change input regime to only facilitate CET timestamps
+    if date_from.tzinfo is None:
         # Convert start and end dates if summertime offset is desired
         if offset_summertime:
             date_from = timezone('CET').localize(date_from)
