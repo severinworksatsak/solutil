@@ -16,18 +16,18 @@ import warnings
 # Env Variable Retrieval
 def get_env_variables(mandant:str, scope:str='get_ts'):
     """
-    Retrieve setup variables from .env environment file, e.g. BelVis username & password.
+    Retrieve setup variables from .env environment file, e.g., BelVis username & password.
 
     Parameters:
-    - mandant (str): Any existing Belvis Mandant. Commonly used: 'EPAG_PFM' or 'EPAG_ENERGIE'.
-    - scope (str): Scope of to-be-retrieved variables. Can be 'all' or 'get_ts'.
+        - **mandant** (str): Any existing Belvis Mandant. Commonly used: 'EPAG_PFM' or 'EPAG_ENERGIE'.
+        - **scope** (str): Scope of to-be-retrieved variables. Can be 'all' or 'get_ts'.
 
     Returns:
-    - env_dict (dict): Dictionary with environment variables of selected scope.
+        - **env_dict** (dict): Dictionary with environment variables of the selected scope.
 
-    Note:
-    - With get_ts, the resulting env_dict can directly be passed to the get_timeseries
-      function and unpacked with ** operator.
+    Notes:
+        With 'get_ts', the resulting env_dict can directly be passed to the get_timeseries
+        function and unpacked with the ** operator.
     """
     # Try to load environment file if it exists
     if not load_dotenv():
@@ -59,28 +59,28 @@ def get_timeseries_15min(ts_id: int, date_from, date_to,
                          offset_summertime: bool = False, col_name: str = 'value',
                          USE_OLD_CX_ORACLE:bool=False):
     """
-    Extract 15min-resolution time series from various BelVis database Mandanten.
+    Extract 15-minute resolution time series from various BelVis database Mandanten.
 
     Parameters:
-    - ts_id (int): The BelVis time series ID in integer format, e.g. 404212442.
-    - date_from (dt): A datetime object representing the start date of the export window.
-                      Start date is inclusive of date_from value, i.e. the start date will
-                      be included in the extraction range. Format examples:
-                      - datetime(2024,1,1,0,0,0)
-                      - datetime.strptime(date_string, format)
-                      - any other datetime object
-    - date_to (dt): A datetime object representing the end date of the export window.
-                    The end date is not included in the queried output.
-    - mandant_user (str):
-    - offset_summertime (bool): Indicator whether summertime is offset, i.e. whether
-                                timestamps are in CET or local time. If False, code will
-                                directly localize timestamp at Etc/GMT-1, else it will
-                                first convert to CET before Etc/GMT-1.
-    - col_name (str): Column name, which output dataframe column should bear.
+        - **ts_id** (int): The BelVis time series ID in integer format, e.g., 404212442.
+        - **date_from** (dt): A datetime object representing the start date of the export window.
+                          Start date is inclusive of `date_from` value, i.e., the start date will
+                          be included in the extraction range. Format examples:
+                          - datetime(2024, 1, 1, 0, 0, 0)
+                          - datetime.strptime(date_string, format)
+                          - any other datetime object
+        - **date_to** (dt): A datetime object representing the end date of the export window.
+                            The end date is not included in the queried output.
+        - **mandant_user** (str): Username for the BelVis Mandant.
+        - **offset_summertime** (bool): Indicator whether summertime is offset, i.e., whether
+                                        timestamps are in Etc/GMT-1 or local time. If False, code will
+                                        directly localize timestamp at Etc/GMT-1, else it will
+                                        first convert to CET before Etc/GMT-1.
+        - **col_name** (str): Column name which the output dataframe column should bear.
 
     Returns:
-    - data_out (pd.df): Dataframe with output time series; timestamp index and col_name column.
-    """
+        - **data_out** (pd.DataFrame): Dataframe with output time series; timestamp index and `col_name` column.
+"""
     if date_from.tzinfo is None:
         # Convert start and end dates if summertime offset is desired
         if offset_summertime:
@@ -369,27 +369,27 @@ def get_timeseries_1h(ts_id: int, date_from, date_to,
                          offset_summertime: bool = False, col_name: str = 'value',
                          USE_OLD_CX_ORACLE:bool=False):
     """
-    Extract 1hour-resolution time series from various BelVis database Mandanten.
+    Extract 1-hour resolution time series from various BelVis database Mandanten.
 
     Parameters:
-    - ts_id (int): The BelVis time series ID in integer format, e.g. 404212442.
-    - date_from (dt): A datetime object representing the start date of the export window.
-                      Start date is inclusive of date_from value, i.e. the start date will
-                      be included in the extraction range. Format examples:
-                      - datetime(2024,1,1,0,0,0)
-                      - datetime.strptime(date_string, format)
-                      - any other datetime object
-    - date_to (dt): A datetime object representing the end date of the export window.
-                    The end date is not included in the queried output.
-    - mandant_user (str):
-    - offset_summertime (bool): Indicator whether summertime is offset, i.e. whether
-                                timestamps are in CET or local time. If False, code will
-                                directly localize timestamp at Etc/GMT-1, else it will
-                                first convert to CET before Etc/GMT-1.
-    - col_name (str): Column name, which output dataframe column should bear.
+        - **ts_id** (int): The BelVis time series ID in integer format, e.g., 404212442.
+        - **date_from** (dt): A datetime object representing the start date of the export window.
+                              Start date is inclusive of `date_from` value, i.e., the start date will
+                              be included in the extraction range. Format examples:
+                              - datetime(2024, 1, 1, 0, 0, 0)
+                              - datetime.strptime(date_string, format)
+                              - any other datetime object
+        - **date_to** (dt): A datetime object representing the end date of the export window.
+                            The end date is not included in the queried output.
+        - **mandant_user** (str): Username for the BelVis Mandant.
+        - **offset_summertime** (bool): Indicator whether summertime is offset, i.e., whether
+                                        timestamps are in CET or local time. If False, code will
+                                        directly localize timestamp at Etc/GMT-1, else it will
+                                        first convert to CET before Etc/GMT-1.
+        - **col_name** (str): Column name which the output dataframe column should bear.
 
     Returns:
-    - data_out (pd.df): Dataframe with output time series; timestamp index and col_name column.
+        - **data_out** (pd.DataFrame): Dataframe with output time series; timestamp index and `col_name` column.
     """
 
     if date_from.tzinfo is None:
@@ -675,27 +675,27 @@ def get_timeseries_1d(ts_id:int, date_from, date_to,
                       col_name:str='value', str_table:str='meanvalues',
                       USE_OLD_CX_ORACLE:bool=False):
     """
-    Extract 1d-resolution time series from various BelVis database Mandanten.
+    Extract 1-day resolution time series from various BelVis database Mandanten.
 
     Parameters:
-    - ts_id (int): The BelVis time series ID in integer format, e.g. 404212442.
-    - date_from (dt): A datetime object representing the start date of the export window.
-                      Start date is inclusive of date_from value, i.e. the start date will
-                      be included in the extraction range. Format examples:
-                      - datetime(2024,1,1,0,0,0)
-                      - datetime.strptime(date_string, format)
-                      - any other datetime object
-    - date_to (dt): A datetime object representing the end date of the export window.
-                    The end date is not included in the queried output.
-    - mandant_user (str):
-    - offset_summertime (bool): Indicator whether summertime is offset, i.e. whether
-                                timestamps are in CET or local time. If False, code will
-                                directly localize timestamp at Etc/GMT-1, else it will
-                                first convert to CET before Etc/GMT-1.
-    - col_name (str): Column name, which output dataframe column should bear.
+        - **ts_id** (int): The BelVis time series ID in integer format, e.g., 404212442.
+        - **date_from** (dt): A datetime object representing the start date of the export window.
+                              Start date is inclusive of `date_from` value, i.e., the start date will
+                              be included in the extraction range. Format examples:
+                              - datetime(2024, 1, 1, 0, 0, 0)
+                              - datetime.strptime(date_string, format)
+                              - any other datetime object
+        - **date_to** (dt): A datetime object representing the end date of the export window.
+                            The end date is not included in the queried output.
+        - **mandant_user** (str): Username for the BelVis Mandant.
+        - **offset_summertime** (bool): Indicator whether summertime is offset, i.e., whether
+                                        timestamps are in CET or local time. If False, code will
+                                        directly localize timestamp at Etc/GMT-1, else it will
+                                        first convert to CET before Etc/GMT-1.
+        - **col_name** (str): Column name which the output dataframe column should bear.
 
     Returns:
-    - data_out (pd.df): Dataframe with output time series; timestamp index and col_name column.
+        - **data_out** (pd.DataFrame): Dataframe with output time series; timestamp index and `col_name` column.
     """
 
     # Convert datetime to string for SQL Input

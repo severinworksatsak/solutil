@@ -2,6 +2,7 @@ README.md
 setup.py
 solutil/__init__.py
 solutil/dbqueries.py
+solutil/evaluations.py
 solutil.egg-info/PKG-INFO
 solutil.egg-info/SOURCES.txt
 solutil.egg-info/dependency_links.txt
