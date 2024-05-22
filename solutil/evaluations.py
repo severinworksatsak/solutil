@@ -60,7 +60,6 @@ def get_act_vs_pred_plot(y_true, y_pred):
 
     # Melt dataframe
     df_melt = pd.melt(df_data, id_vars='time')
-    print(df_melt.head(20))
 
     # Create figure
     fig = sns.lineplot(data=df_melt, x='time', y='value', hue='variable', palette=['#660066', '#FFEB00'])

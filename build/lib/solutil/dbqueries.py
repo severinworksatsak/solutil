@@ -72,14 +72,18 @@ def get_timeseries_15min(ts_id: int, date_from, date_to,
         - **date_to** (dt): A datetime object representing the end date of the export window.
                             The end date is not included in the queried output.
         - **mandant_user** (str): Username for the BelVis Mandant.
+        - **mandant_pwd** (str): Password for the selected BelVis Mandant.
+        - **mandant_addr"" (str): Address of the selected BelVis Mandant.
         - **offset_summertime** (bool): Indicator whether summertime is offset, i.e., whether
                                         timestamps are in Etc/GMT-1 or local time. If False, code will
                                         directly localize timestamp at Etc/GMT-1, else it will
                                         first convert to CET before Etc/GMT-1.
         - **col_name** (str): Column name which the output dataframe column should bear.
+        - **USE_OLD_CX_ORACLE** (bool): Switch variable to use old database connection module. Deprecated under
+                                        Python versions >3.6.
 
     Returns:
-        - **data_out** (pd.DataFrame): Dataframe with output time series; timestamp index and `col_name` column.
+        - **data_out** (pd.Series): Dataframe with output time series; timestamp index and `col_name` name.
 """
     if date_from.tzinfo is None:
         # Convert start and end dates if summertime offset is desired
@@ -382,14 +386,18 @@ def get_timeseries_1h(ts_id: int, date_from, date_to,
         - **date_to** (dt): A datetime object representing the end date of the export window.
                             The end date is not included in the queried output.
         - **mandant_user** (str): Username for the BelVis Mandant.
+        - **mandant_pwd** (str): Password for the selected BelVis Mandant.
+        - **mandant_addr"" (str): Address of the selected BelVis Mandant.
         - **offset_summertime** (bool): Indicator whether summertime is offset, i.e., whether
                                         timestamps are in CET or local time. If False, code will
                                         directly localize timestamp at Etc/GMT-1, else it will
                                         first convert to CET before Etc/GMT-1.
         - **col_name** (str): Column name which the output dataframe column should bear.
+        - **USE_OLD_CX_ORACLE** (bool): Switch variable to use old database connection module. Deprecated under
+                                        Python versions >3.6.
 
     Returns:
-        - **data_out** (pd.DataFrame): Dataframe with output time series; timestamp index and `col_name` column.
+        - **data_out** (pd.Series): Dataframe with output time series; timestamp index and `col_name` name.
     """
 
     if date_from.tzinfo is None:
@@ -688,14 +696,14 @@ def get_timeseries_1d(ts_id:int, date_from, date_to,
         - **date_to** (dt): A datetime object representing the end date of the export window.
                             The end date is not included in the queried output.
         - **mandant_user** (str): Username for the BelVis Mandant.
-        - **offset_summertime** (bool): Indicator whether summertime is offset, i.e., whether
-                                        timestamps are in CET or local time. If False, code will
-                                        directly localize timestamp at Etc/GMT-1, else it will
-                                        first convert to CET before Etc/GMT-1.
+        - **mandant_pwd** (str): Password for the selected BelVis Mandant.
+        - **mandant_addr"" (str): Address of the selected BelVis Mandant.
         - **col_name** (str): Column name which the output dataframe column should bear.
+        - **str_table** (str): Table name suffix for ts_{str_table} to determine target table as specified by
+                               SQL database structure. Defaults to 'meanvalues', other option is 'sumvalues'.
 
     Returns:
-        - **data_out** (pd.DataFrame): Dataframe with output time series; timestamp index and `col_name` column.
+        - **data_out** (pd.Series): Dataframe with output time series; timestamp index and `col_name` name.
     """
 
     # Convert datetime to string for SQL Input
@@ -749,11 +757,15 @@ def get_timeseries_1d(ts_id:int, date_from, date_to,
     # Exception Handling based on state_l
     for i in range(len(ts_cursor)):
         if ts_cursor[i][2] != 285212672:
-            data_out.loc[ts_cursor[i][0]]['value'] = ts_cursor[i][1]
+            data_out.loc[ts_cursor[i][0], 'value'] = ts_cursor[i][1]
 
     # Timezone & Data Type Conversion
     data_out.index = data_out.index.tz_localize('Etc/GMT-1')
     data_out['value'] = pd.to_numeric(data_out['value']).copy()
+
+    # Convert to Series
+    if len(data_out.columns) <= 1:
+        data_out = data_out['value']
 
     return data_out
 
