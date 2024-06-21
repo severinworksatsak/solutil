@@ -755,8 +755,9 @@ def get_timeseries_1d(ts_id:int, date_from, date_to,
                     &#34;&#34;&#34;
 
     # Define Query String
-    str_sql = f&#34;&#34;&#34;select tstamp_ts, value0_fl, state_l from tsd_{str_table}
-                    where timeseries_l = (select min(ident) from ts_timeseries where valuelist_l = {ts_id})
+    str_sql = f&#34;&#34;&#34;select tstamp_ts, value0_fl, state_l 
+                  from tsd_{str_table}
+                  where timeseries_l = (select min(ident) from ts_timeseries where valuelist_l = {ts_id})
                     and tstamp_ts &gt;= to_date(&#39;{str_from}&#39;, &#39;DD.MM.YYYY&#39;)
                     and tstamp_ts &lt; to_date(&#39;{str_to}&#39;, &#39;DD.MM.YYYY&#39;)&#34;&#34;&#34;
 
@@ -787,17 +788,85 @@ def get_timeseries_1d(ts_id:int, date_from, date_to,
     # Exception Handling based on state_l
     for i in range(len(ts_cursor)):
         if ts_cursor[i][2] != 285212672:
-            data_out.loc[ts_cursor[i][0], &#39;value&#39;] = ts_cursor[i][1]
+            data_out.loc[ts_cursor[i][0], col_name] = ts_cursor[i][1]
 
     # Timezone &amp; Data Type Conversion
     data_out.index = data_out.index.tz_localize(&#39;Etc/GMT-1&#39;)
-    data_out[&#39;value&#39;] = pd.to_numeric(data_out[&#39;value&#39;]).copy()
+    data_out[col_name] = pd.to_numeric(data_out[col_name]).copy()
 
     # Convert to Series
     if len(data_out.columns) &lt;= 1:
-        data_out = data_out[&#39;value&#39;]
+        data_out = data_out[col_name]
 
-    return data_out</code></pre>
+    return data_out
+
+
+# def get_ts_info(ts_id, mandant_user:str, mandant_pwd, mandant_addr:str):
+#
+#     # SQL Query String
+#     str_sql = f&#34;&#34;&#34;
+#         select vall.name_zr_s as ts_name,
+#             vall.name_inst_s as ts_parent,
+#             vall.ident_vl_l as ts_id,
+#             vall.einheit_s as ts_unit,
+#             vall.creation_ts as ts_creation,
+#             vall.lastsave_ts as ts_lastsave
+#         from v_zr_all vall
+#         where vall.ident_vl_l = TO_NUMBER(:ts_int)
+#     &#34;&#34;&#34;
+#     print(str_sql)
+#     with oracledb.connect(user=mandant_user, password=mandant_pwd,
+#                           dsn=mandant_addr) as db_conn:
+#         db_cursor = db_conn.cursor()
+#
+#         # Fetch data from db
+#         ts_cursor = db_cursor.execute(str_sql, {&#39;ts_int&#39;: ts_id}).fetchall()
+#
+#     # Post-Query Data Handling
+#     data_db = pd.DataFrame.from_records(ts_cursor, columns =[&#39;ts_name&#39;, &#39;ts_parent&#39;, &#39;ts_id&#39;, &#39;ts_unit&#39;,
+#                                                              &#39;ts_creation&#39;, &#39;ts_lastsave&#39;])
+#
+#     return data_db
+
+
+def ts_name_lookup(str_name:str, mandant_user:str, mandant_pwd, mandant_addr:str):
+    &#34;&#34;&#34;
+    Find time series from a string pattern search of all available time series in a Belvis mandant.
+
+    Parameters:
+        - **str_name** (str): String pattern for &#39;WHERE LIKE {}&#39; SQL clause. Example: &#39;%NM%Prognose&#39;
+                              for time series &#39;Niederschlagsmenge.Prognose.Meteomatics&#39;
+        - **mandant_user** (str): Username for the BelVis Mandant.
+        - **mandant_pwd** (str): Password for the selected BelVis Mandant.
+        - **mandant_addr** (str): Address of the selected BelVis Mandant.
+
+    Returns:
+        - **pd.DataFrame**: Time series overview for ts names with matching patterns. Includes name,
+                        ts ids, parent infos, creation and lastsave dates.
+    &#34;&#34;&#34;
+    # SQL Query String
+    str_sql = f&#34;&#34;&#34;
+        select vall.name_zr_s as ts_name,
+            vall.name_inst_s as ts_parent,
+            vall.ident_vl_l as ts_id, 
+            vall.einheit_s as ts_unit,
+            vall.creation_ts as ts_creation,
+            vall.lastsave_ts as ts_lastsave
+        from v_zr_all vall
+        where vall.name_zr_s like :name_pattern
+    &#34;&#34;&#34;
+
+    with oracledb.connect(user=mandant_user, password=mandant_pwd,
+                          dsn=mandant_addr) as db_conn:
+        db_cursor = db_conn.cursor()
+
+        # Fetch data from db
+        ts_cursor = db_cursor.execute(str_sql, {&#39;name_pattern&#39;: str_name}).fetchall()
+
+    # Post-Query Data Handling
+    data_db = pd.DataFrame.from_records(ts_cursor, columns =[&#39;ts_name&#39;, &#39;ts_parent&#39;,&#39;ts_id&#39;, &#39;ts_unit&#39;, &#39;ts_creation&#39;, &#39;ts_lastsave&#39;])
+
+    return data_db</code></pre>
 </details>
 </section>
 <section>
@@ -1293,8 +1362,9 @@ SQL database structure. Defaults to 'meanvalues', other option is 'sumvalues'.</
                     &#34;&#34;&#34;
 
     # Define Query String
-    str_sql = f&#34;&#34;&#34;select tstamp_ts, value0_fl, state_l from tsd_{str_table}
-                    where timeseries_l = (select min(ident) from ts_timeseries where valuelist_l = {ts_id})
+    str_sql = f&#34;&#34;&#34;select tstamp_ts, value0_fl, state_l 
+                  from tsd_{str_table}
+                  where timeseries_l = (select min(ident) from ts_timeseries where valuelist_l = {ts_id})
                     and tstamp_ts &gt;= to_date(&#39;{str_from}&#39;, &#39;DD.MM.YYYY&#39;)
                     and tstamp_ts &lt; to_date(&#39;{str_to}&#39;, &#39;DD.MM.YYYY&#39;)&#34;&#34;&#34;
 
@@ -1325,15 +1395,15 @@ SQL database structure. Defaults to 'meanvalues', other option is 'sumvalues'.</
     # Exception Handling based on state_l
     for i in range(len(ts_cursor)):
         if ts_cursor[i][2] != 285212672:
-            data_out.loc[ts_cursor[i][0], &#39;value&#39;] = ts_cursor[i][1]
+            data_out.loc[ts_cursor[i][0], col_name] = ts_cursor[i][1]
 
     # Timezone &amp; Data Type Conversion
     data_out.index = data_out.index.tz_localize(&#39;Etc/GMT-1&#39;)
-    data_out[&#39;value&#39;] = pd.to_numeric(data_out[&#39;value&#39;]).copy()
+    data_out[col_name] = pd.to_numeric(data_out[col_name]).copy()
 
     # Convert to Series
     if len(data_out.columns) &lt;= 1:
-        data_out = data_out[&#39;value&#39;]
+        data_out = data_out[col_name]
 
     return data_out</code></pre>
 </details>
@@ -1682,6 +1752,68 @@ Python versions &gt;3.6.</li>
     return data_out</code></pre>
 </details>
 </dd>
+<dt id="solutil.dbqueries.ts_name_lookup"><code class="name flex">
+<span>def <span class="ident">ts_name_lookup</span></span>(<span>str_name: str, mandant_user: str, mandant_pwd, mandant_addr: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Find time series from a string pattern search of all available time series in a Belvis mandant.</p>
+<h2 id="parameters">Parameters</h2>
+<ul>
+<li><strong>str_name</strong> (str): String pattern for 'WHERE LIKE {}' SQL clause. Example: '%NM%Prognose'
+for time series 'Niederschlagsmenge.Prognose.Meteomatics'</li>
+<li><strong>mandant_user</strong> (str): Username for the BelVis Mandant.</li>
+<li><strong>mandant_pwd</strong> (str): Password for the selected BelVis Mandant.</li>
+<li><strong>mandant_addr</strong> (str): Address of the selected BelVis Mandant.</li>
+</ul>
+<h2 id="returns">Returns</h2>
+<ul>
+<li><strong>pd.DataFrame</strong>: Time series overview for ts names with matching patterns. Includes name,
+ts ids, parent infos, creation and lastsave dates.</li>
+</ul></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ts_name_lookup(str_name:str, mandant_user:str, mandant_pwd, mandant_addr:str):
+    &#34;&#34;&#34;
+    Find time series from a string pattern search of all available time series in a Belvis mandant.
+
+    Parameters:
+        - **str_name** (str): String pattern for &#39;WHERE LIKE {}&#39; SQL clause. Example: &#39;%NM%Prognose&#39;
+                              for time series &#39;Niederschlagsmenge.Prognose.Meteomatics&#39;
+        - **mandant_user** (str): Username for the BelVis Mandant.
+        - **mandant_pwd** (str): Password for the selected BelVis Mandant.
+        - **mandant_addr** (str): Address of the selected BelVis Mandant.
+
+    Returns:
+        - **pd.DataFrame**: Time series overview for ts names with matching patterns. Includes name,
+                        ts ids, parent infos, creation and lastsave dates.
+    &#34;&#34;&#34;
+    # SQL Query String
+    str_sql = f&#34;&#34;&#34;
+        select vall.name_zr_s as ts_name,
+            vall.name_inst_s as ts_parent,
+            vall.ident_vl_l as ts_id, 
+            vall.einheit_s as ts_unit,
+            vall.creation_ts as ts_creation,
+            vall.lastsave_ts as ts_lastsave
+        from v_zr_all vall
+        where vall.name_zr_s like :name_pattern
+    &#34;&#34;&#34;
+
+    with oracledb.connect(user=mandant_user, password=mandant_pwd,
+                          dsn=mandant_addr) as db_conn:
+        db_cursor = db_conn.cursor()
+
+        # Fetch data from db
+        ts_cursor = db_cursor.execute(str_sql, {&#39;name_pattern&#39;: str_name}).fetchall()
+
+    # Post-Query Data Handling
+    data_db = pd.DataFrame.from_records(ts_cursor, columns =[&#39;ts_name&#39;, &#39;ts_parent&#39;,&#39;ts_id&#39;, &#39;ts_unit&#39;, &#39;ts_creation&#39;, &#39;ts_lastsave&#39;])
+
+    return data_db</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -1704,6 +1836,7 @@ Python versions &gt;3.6.</li>
 <li><code><a title="solutil.dbqueries.get_timeseries_15min" href="#solutil.dbqueries.get_timeseries_15min">get_timeseries_15min</a></code></li>
 <li><code><a title="solutil.dbqueries.get_timeseries_1d" href="#solutil.dbqueries.get_timeseries_1d">get_timeseries_1d</a></code></li>
 <li><code><a title="solutil.dbqueries.get_timeseries_1h" href="#solutil.dbqueries.get_timeseries_1h">get_timeseries_1h</a></code></li>
+<li><code><a title="solutil.dbqueries.ts_name_lookup" href="#solutil.dbqueries.ts_name_lookup">ts_name_lookup</a></code></li>
 </ul>
 </li>
 </ul>

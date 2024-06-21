@@ -725,8 +725,9 @@ def get_timeseries_1d(ts_id:int, date_from, date_to,
                     """
 
     # Define Query String
-    str_sql = f"""select tstamp_ts, value0_fl, state_l from tsd_{str_table}
-                    where timeseries_l = (select min(ident) from ts_timeseries where valuelist_l = {ts_id})
+    str_sql = f"""select tstamp_ts, value0_fl, state_l 
+                  from tsd_{str_table}
+                  where timeseries_l = (select min(ident) from ts_timeseries where valuelist_l = {ts_id})
                     and tstamp_ts >= to_date('{str_from}', 'DD.MM.YYYY')
                     and tstamp_ts < to_date('{str_to}', 'DD.MM.YYYY')"""
 
@@ -757,16 +758,86 @@ def get_timeseries_1d(ts_id:int, date_from, date_to,
     # Exception Handling based on state_l
     for i in range(len(ts_cursor)):
         if ts_cursor[i][2] != 285212672:
-            data_out.loc[ts_cursor[i][0], 'value'] = ts_cursor[i][1]
+            data_out.loc[ts_cursor[i][0], col_name] = ts_cursor[i][1]
 
     # Timezone & Data Type Conversion
     data_out.index = data_out.index.tz_localize('Etc/GMT-1')
-    data_out['value'] = pd.to_numeric(data_out['value']).copy()
+    data_out[col_name] = pd.to_numeric(data_out[col_name]).copy()
 
     # Convert to Series
     if len(data_out.columns) <= 1:
-        data_out = data_out['value']
+        data_out = data_out[col_name]
 
     return data_out
+
+
+# def get_ts_info(ts_id, mandant_user:str, mandant_pwd, mandant_addr:str):
+#
+#     # SQL Query String
+#     str_sql = f"""
+#         select vall.name_zr_s as ts_name,
+#             vall.name_inst_s as ts_parent,
+#             vall.ident_vl_l as ts_id,
+#             vall.einheit_s as ts_unit,
+#             vall.creation_ts as ts_creation,
+#             vall.lastsave_ts as ts_lastsave
+#         from v_zr_all vall
+#         where vall.ident_vl_l = TO_NUMBER(:ts_int)
+#     """
+#     print(str_sql)
+#     with oracledb.connect(user=mandant_user, password=mandant_pwd,
+#                           dsn=mandant_addr) as db_conn:
+#         db_cursor = db_conn.cursor()
+#
+#         # Fetch data from db
+#         ts_cursor = db_cursor.execute(str_sql, {'ts_int': ts_id}).fetchall()
+#
+#     # Post-Query Data Handling
+#     data_db = pd.DataFrame.from_records(ts_cursor, columns =['ts_name', 'ts_parent', 'ts_id', 'ts_unit',
+#                                                              'ts_creation', 'ts_lastsave'])
+#
+#     return data_db
+
+
+def ts_name_lookup(str_name:str, mandant_user:str, mandant_pwd, mandant_addr:str):
+    """
+    Find time series from a string pattern search of all available time series in a Belvis mandant.
+
+    Parameters:
+        - **str_name** (str): String pattern for 'WHERE LIKE {}' SQL clause. Example: '%NM%Prognose'
+                              for time series 'Niederschlagsmenge.Prognose.Meteomatics'
+        - **mandant_user** (str): Username for the BelVis Mandant.
+        - **mandant_pwd** (str): Password for the selected BelVis Mandant.
+        - **mandant_addr** (str): Address of the selected BelVis Mandant.
+
+    Returns:
+        - **pd.DataFrame**: Time series overview for ts names with matching patterns. Includes name,
+                        ts ids, parent infos, creation and lastsave dates.
+    """
+    # SQL Query String
+    str_sql = f"""
+        select vall.name_zr_s as ts_name,
+            vall.name_inst_s as ts_parent,
+            vall.ident_vl_l as ts_id, 
+            vall.einheit_s as ts_unit,
+            vall.creation_ts as ts_creation,
+            vall.lastsave_ts as ts_lastsave
+        from v_zr_all vall
+        where vall.name_zr_s like :name_pattern
+    """
+
+    with oracledb.connect(user=mandant_user, password=mandant_pwd,
+                          dsn=mandant_addr) as db_conn:
+        db_cursor = db_conn.cursor()
+
+        # Fetch data from db
+        ts_cursor = db_cursor.execute(str_sql, {'name_pattern': str_name}).fetchall()
+
+    # Post-Query Data Handling
+    data_db = pd.DataFrame.from_records(ts_cursor, columns =['ts_name', 'ts_parent','ts_id', 'ts_unit', 'ts_creation', 'ts_lastsave'])
+
+    return data_db
+
+
 
 
