@@ -808,10 +808,10 @@ def ts_name_lookup(str_name:str, mandant_user:str, mandant_pwd, mandant_addr:str
                               for time series 'Niederschlagsmenge.Prognose.Meteomatics'
         - **mandant_user** (str): Username for the BelVis Mandant.
         - **mandant_pwd** (str): Password for the selected BelVis Mandant.
-        - **mandant_addr"" (str): Address of the selected BelVis Mandant.
+        - **mandant_addr** (str): Address of the selected BelVis Mandant.
 
     Returns:
-    - **pd.DataFrame**: Time series overview for ts names with matching patterns. Includes name,
+        - **pd.DataFrame**: Time series overview for ts names with matching patterns. Includes name,
                         ts ids, parent infos, creation and lastsave dates.
     """
     # SQL Query String
