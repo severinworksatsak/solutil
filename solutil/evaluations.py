@@ -27,7 +27,7 @@ def get_eval_metrics(y_true, y_pred):
     mae = metrics.mean_absolute_error(df_comb['y_true'], df_comb['y_pred'])
     mse = metrics.mean_squared_error(df_comb['y_true'], df_comb['y_pred'])
     rmse = metrics.root_mean_squared_error(df_comb['y_true'], df_comb['y_pred'])
-    mape = metrics.mean_absolute_error(df_comb['y_true'], df_comb['y_pred'])
+    mape = metrics.mean_absolute_percentage_error(df_comb['y_true'], df_comb['y_pred'])
     nonna = round(len(df_comb) / len(y_true), 2)
     len_true = len(y_true)
     nnas = len_true - len(df_comb)
