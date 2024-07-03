@@ -55,7 +55,7 @@ def get_eval_metrics(y_true, y_pred):
     mae = metrics.mean_absolute_error(df_comb[&#39;y_true&#39;], df_comb[&#39;y_pred&#39;])
     mse = metrics.mean_squared_error(df_comb[&#39;y_true&#39;], df_comb[&#39;y_pred&#39;])
     rmse = metrics.root_mean_squared_error(df_comb[&#39;y_true&#39;], df_comb[&#39;y_pred&#39;])
-    mape = metrics.mean_absolute_error(df_comb[&#39;y_true&#39;], df_comb[&#39;y_pred&#39;])
+    mape = metrics.mean_absolute_percentage_error(df_comb[&#39;y_true&#39;], df_comb[&#39;y_pred&#39;]) # changed from mae
     nonna = round(len(df_comb) / len(y_true), 2)
     len_true = len(y_true)
     nnas = len_true - len(df_comb)
@@ -186,7 +186,7 @@ def get_act_vs_pred_plot(y_true, y_pred):
     mae = metrics.mean_absolute_error(df_comb[&#39;y_true&#39;], df_comb[&#39;y_pred&#39;])
     mse = metrics.mean_squared_error(df_comb[&#39;y_true&#39;], df_comb[&#39;y_pred&#39;])
     rmse = metrics.root_mean_squared_error(df_comb[&#39;y_true&#39;], df_comb[&#39;y_pred&#39;])
-    mape = metrics.mean_absolute_error(df_comb[&#39;y_true&#39;], df_comb[&#39;y_pred&#39;])
+    mape = metrics.mean_absolute_percentage_error(df_comb[&#39;y_true&#39;], df_comb[&#39;y_pred&#39;]) # changed from mae
     nonna = round(len(df_comb) / len(y_true), 2)
     len_true = len(y_true)
     nnas = len_true - len(df_comb)
