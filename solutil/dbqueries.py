@@ -107,7 +107,7 @@ def get_timeseries_15min(ts_id: int, date_from, date_to,
                             tsd.tstamp_ts - lag(tsd.tstamp_ts) over (order by tsd.tstamp_ts) as date_diff
                         from tsd_wnmin195 tsd
                         where tsd.timeseries_l = (
-                            select ident
+                            select min(ident)
                             from ts_timeseries ts
                             where ts.valuelist_l = {ts_id}
                             ) and
@@ -339,8 +339,9 @@ def get_timeseries_15min(ts_id: int, date_from, date_to,
             # Check timedelta conformity with get_timeseries interval
             ts_check = db_cursor.execute(check_str_sql).fetchall()
             df_check = pd.DataFrame([row[1] for row in ts_check], index=[row[0] for row in ts_check], columns=['value'])
-            if df_check.iloc[1, 0] != 1:
-                print(warnings.warn(f"Warning: Time series with ID {ts_id} might not be in 15min resolution."))
+            if len(df_check) > 1:
+                if df_check.iloc[1, 0] != 1:
+                    print(warnings.warn(f"Warning: Time series with ID {ts_id} might not be in 15min resolution."))
 
             # Fetch data from db
             ts_cursor = db_cursor.execute(str_sql).fetchall()
@@ -419,7 +420,7 @@ def get_timeseries_1h(ts_id: int, date_from, date_to,
                             tsd.tstamp_ts - lag(tsd.tstamp_ts) over (order by tsd.tstamp_ts) as date_diff
                         from tsd_wnmin195 tsd
                         where tsd.timeseries_l = (
-                            select ident
+                            select min(ident)
                             from ts_timeseries ts
                             where ts.valuelist_l = {ts_id}
                             ) and
@@ -650,8 +651,9 @@ def get_timeseries_1h(ts_id: int, date_from, date_to,
             # Check timedelta conformity with get_timeseries interval
             ts_check = db_cursor.execute(check_str_sql).fetchall()
             df_check = pd.DataFrame([row[1] for row in ts_check], index=[row[0] for row in ts_check], columns=['value'])
-            if df_check.iloc[1, 0] != 4:
-                print(warnings.warn(f"Warning: Time series with ID {ts_id} might not be in 1h resolution."))
+            if len(df_check) > 1:
+                if df_check.iloc[1, 0] != 4:
+                    print(warnings.warn(f"Warning: Time series with ID {ts_id} might not be in 1h resolution."))
 
             ts_cursor = db_cursor.execute(str_sql).fetchall()
 
@@ -715,7 +717,7 @@ def get_timeseries_1d(ts_id:int, date_from, date_to,
                             tsd.tstamp_ts - lag(tsd.tstamp_ts) over (order by tsd.tstamp_ts) as date_diff
                         from tsd_{str_table} tsd
                         where tsd.timeseries_l = (
-                            select ident
+                            select min(ident)
                             from ts_timeseries ts
                             where ts.valuelist_l = {ts_id}
                             ) and
@@ -745,8 +747,9 @@ def get_timeseries_1d(ts_id:int, date_from, date_to,
             # Check timedelta conformity with get_timeseries interval
             ts_check = db_cursor.execute(check_str_sql).fetchall()
             df_check = pd.DataFrame([row[1] for row in ts_check], index=[row[0] for row in ts_check], columns=['value'])
-            if df_check.iloc[1, 0] != 1:
-                print(warnings.warn(f"Warning: Time series with ID {ts_id} might not be in 1d resolution."))
+            if len(df_check) > 1:
+                if df_check.iloc[1, 0] != 1:
+                    print(warnings.warn(f"Warning: Time series with ID {ts_id} might not be in 1d resolution."))
 
             ts_cursor = db_cursor.execute(str_sql).fetchall()
 
