@@ -311,7 +311,8 @@ class Forecaster:
 
 
     # VTV Lastgang rollout
-    def rollout_lastgang(self, prog_start, prog_end, mandant:str='SAK_ENERGIE', df_hist:pd.DataFrame=None, belvis_dict:dict=None):
+    def rollout_lastgang(self, prog_start, prog_end, mandant:str='SAK_ENERGIE', df_hist:pd.Series=None, belvis_dict:dict=None,
+                         env_vars:dict=None):
         """
         Roll out lastgang based on 15min data.
 
@@ -329,7 +330,9 @@ class Forecaster:
         - **tuple of (pd.DataFrame)**: Historical data (0) and forecast dataframe (1)
         """
         # Load timeseries
-        env_vars = get_env_variables(mandant=mandant)
+        if env_vars is None:
+            env_vars = get_env_variables(mandant=mandant)
+
         if df_hist is None:
             df_hist = get_timeseries_15min(**belvis_dict | env_vars) # Unpack two dicts at once
 

@@ -5,7 +5,7 @@ import numpy as np
 import json
 from pathlib import Path
 import holidays
-from dbqueries import get_timeseries_15min, get_env_variables
+from solutil.dbqueries import get_timeseries_15min, get_env_variables
 
 
 class Forecaster:
@@ -27,9 +27,11 @@ class Forecaster:
         """
         Filter input array by index location.
 
-        :param input_array: Float input array being compared against the index locators.
-        :param validation_idx: Input array containing bool indicators for the locations in an index to be selected.
-        :return: Float array of values corresponding to the True index locations.
+            - **input_array**: Float input array being compared against the index locators.
+            - **validation_idx**: Input array containing bool indicators for the locations in an index to be selected.
+
+        Returns:
+            - **output_array**: (np.array) Float array of values corresponding to the True index locations.
         """
         output_array = np.zeros(sum(validation_idx))
         i_out = 0
@@ -42,12 +44,15 @@ class Forecaster:
 
     def locate_in_int_array(self, input_array, validation_idx):
         """
-                Filter input array by index location.
+        Filter input array by index location.
 
-                :param input_array: Integer input array being compared against the index locators.
-                :param validation_idx: Input array containing bool indicators for the locations in an index to be selected.
-                :return: Integer array of values corresponding to the True index locations.
-                """
+        Parameters:
+            - **input_array**: Integer input array being compared against the index locators.
+            - **validation_idx**: Input array containing bool indicators for the locations in an index to be selected.
+
+        Returns:
+            - Integer array of values corresponding to the True index locations.
+        """
         output_array = np.zeros(sum(validation_idx), dtype=np.int64)
         i_out = 0
         for i, element in enumerate(input_array):
@@ -58,19 +63,31 @@ class Forecaster:
         return output_array
 
     def create_prog_strawman(self, date_from, date_to):
+        """
+        Create strawman with datetime index, filled with dummy data to be replaced in subsequent methods.
+
+            - **date_from**: (datetime) Forecast start period.
+            - **date_to**: (datetime) Forecast end period.
+
+        Returns:
+            -  **prog_data**: (pd.Series) Data structure strawman with np.zeros vector.
+        """
         date_range = pd.date_range(start=date_from, end=date_to, inclusive='left', freq='1h', tz='Europe/Zurich')
         dummy_data = np.zeros(len(date_range))
         prog_data = pd.Series(data=dummy_data, index=date_range)
 
         return prog_data
 
-    def get_forecast_inputs(self, data_input):
+    def get_forecast_inputs(self, data_input:pd.Series):
         """
         Prepare vtv forecast by computing the required variables for the vtv method.
 
-        :param data_input: (pd.Series) with datetime index containing load of either base year or empty forecast strawman.
-                           Frequency can be either D, h or 15min. If 15min, series will be resampled to 1h.
-        :return: DataFrame containing all required variables for vtv algorithm
+        Parameters:
+            - **data_input**: (pd.Series) with datetime index containing load of either base year or empty forecast
+                              strawman. Frequency can be either D, h or 15min. If 15min, series will be resampled to 1h.
+
+        Returns:
+            - DataFrame containing all required variables for vtv algorithm
         """
         # Load parameters from config if not specified
         default_params = self.forecast.copy()
@@ -104,7 +121,6 @@ class Forecaster:
         hours = data_input.index.hour
         minutes = data_input.index.minute
 
-        # summertime_offset = (hours != data_input.index.tz_convert('Etc/GMT-1').hour) * 1 # TODO: Take from line 665 ff. forecast_epag or at least rethink
         index_offset = data_input.index.tz_convert('CET')  # + timedelta(days=1)
         summertime_offset = [index_offset[i].tzinfo._dst.seconds / 3600 for i in range(len(data_input))]
 
@@ -133,6 +149,16 @@ class Forecaster:
         return df_combined
 
     def evaluate_forecast(self, df_hist, df_forecast):
+        """
+        Evaluate each year of forecast by benchmarking parameters to reference lastgang.
+
+        Parameters:
+            - **df_hist**: (pd.Series) Historical reference lastgang.
+            - **df_forecast**: (pd.Series) (Multi-year) VTV forecast based on historical lastgang.
+
+        Returns:
+            - **output**: (dict) Yearly comparison of forecast with base lastgang.
+        """
 
         freq_hist = (df_hist.index[1] - df_hist.index[0]).seconds / 3600
         freq_prog = (df_forecast.index[1] - df_forecast.index[0]).seconds / 3600
@@ -158,10 +184,13 @@ class Forecaster:
         """
         Roll out Lastgang series by applying VTV procedure on reference year Lastgang.
 
-        :param df_hist: Dataframe containing historical load data and prepared inputs from get_forecast_inputs.
-        :param df_prog: DataFrame containing to-be-filled series for future periods and prepared inputs from get_forecast_inputs.
-        :param kwargs: Possible kwargs: [max_window_size, window_size, expand_step, v_val_min, tz, freq]
-        :return:
+        Parameters:
+            - **df_hist**: Dataframe containing historical load data and prepared inputs from get_forecast_inputs.
+            - **df_prog**: DataFrame containing to-be-filled series for future periods and prepared inputs from get_forecast_inputs.
+            - **kwargs**: Possible kwargs: [max_window_size, window_size, expand_step, v_val_min, tz, freq]
+
+        Returns:
+            - df_out (pd.Series): VTV forecast output (in same unit as input) with datetime index.
         """
         print("Forecast started.")
 
@@ -282,25 +311,28 @@ class Forecaster:
 
 
     # VTV Lastgang rollout
-    def rollout_lastgang(self, prog_start, prog_end, mandant:str='SAK_ENERGIE', df_hist:pd.DataFrame=None, belvis_dict:dict=None):
+    def rollout_lastgang(self, prog_start, prog_end, mandant:str='SAK_ENERGIE', df_hist:pd.DataFrame=None, belvis_dict:dict=None,
+                         env_vars:dict=None):
         """
         Roll out lastgang based on 15min data.
 
-        Paramters:
-            - prog_start: (datetime) Start date of prediction window. Should be datetime object.
-            - prog_end: (datetime) End date of prediction window. Should be datetime object.
-            - mandant: (str) Name of Belvis mandant from which timeseries is coming. Will be used to load environment vars
+        Parameters:
+            - **prog_start**: (datetime) Start date of prediction window. Should be datetime object.
+            - **prog_end**: (datetime) End date of prediction window. Should be datetime object.
+            - **mandant**: (str) Name of Belvis mandant from which timeseries is coming. Will be used to load environment vars
                         mandant_user, mandant_pwd and mandant_addr.
-            - df_hist: (pd.Series) Historical lastgang series with datetime index to be rolled out. If none is provided,
+            - **df_hist**: (pd.Series) Historical lastgang series with datetime index to be rolled out. If none is provided,
                         time series will be loaded from Belvis directly.
-            - belvis_dict: (dict) Dictionary containing parameters required for get_timeseries_15min, more specifically:
+            - **belvis_dict**: (dict) Dictionary containing parameters required for get_timeseries_15min, more specifically:
                            ts_id: (int) | date_from (datetime) | date_to (datetime)
 
         Returns:
-        - tuple of (pd.DataFrame): Historical data (0) and forecast dataframe (1)
+        - **tuple of (pd.DataFrame)**: Historical data (0) and forecast dataframe (1)
         """
         # Load timeseries
-        env_vars = get_env_variables(mandant=mandant)
+        if env_vars is None:
+            env_vars = get_env_variables(mandant=mandant)
+
         if df_hist is None:
             df_hist = get_timeseries_15min(**belvis_dict | env_vars) # Unpack two dicts at once
 
